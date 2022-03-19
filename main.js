@@ -1,13 +1,6 @@
 //INFO
 class Info {
     constructor() {
-        this.x = 2;
-    }
-    plus(p) {
-        this.x += p;
-    }
-    get() {
-        return this.x;
     }
 }
 //FUNCTIONS
@@ -49,17 +42,17 @@ function process(canvas, ctx, lastfrtime, info) {
 }
 //CODE
 function setup(canvas, ctx) {
+    /*
     canvas[0].width = viewportToPixels('100vw');
     canvas[0].height = viewportToPixels('100vh');
     canvas[1].width = viewportToPixels('100vw');
     canvas[1].height = viewportToPixels('100vh');
+    */
     return new Info();
 }
 function loop(canvas, ctx, frtime, info) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let x = info.get();
-    ctx.fillRect(x + 100, 100, 100, 100);
-    document.title = frtime;
-    info.plus(1);
+    //canvas resizing
+    canvas.width = viewportToPixels('100vw');
+    canvas.height = viewportToPixels('100vh');
     return info;
 }

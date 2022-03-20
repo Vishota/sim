@@ -1,7 +1,7 @@
 //consts
 const GR_COEF = 0.1;
 const SPEED_COEF = 0.01;
-
+const FRICT_COEF = 0.001;
 //INFO
 class Info {
     tick(frtime) {
@@ -27,13 +27,9 @@ class Info {
         //      _____CALCULATING SPEEDS_____
         keys = Object.keys(this.bodies);
         keys.forEach(i => {
-            this.bodies[i].speed = this.bodies[i].speed.add(forces[i].mult(frtime / this.bodies[i].mass));
             keys = keys.filter(f => {return f != i});   //DELETING [i] BODY FROM LIST
             keys.forEach(j => {
-                //console.log('(' + i + ';' + j + ')');   
-                //console.log(this.bodies[i].mass * this.bodies[i].speed.len() - this.bodies[j].mass * this.bodies[j].speed.len() / (this.bodies[i].mass + this.bodies[j].mass));
                 if(this.bodies[i].pos.diff(this.bodies[j].pos).len() < this.bodies[i].radius + this.bodies[j].radius) {            //COLLISION CHECK
-                    //hm...
                     let dist = this.bodies[j].pos.subtr(this.bodies[i].pos);
 
                     let iV0 = this.bodies[i].speed;
@@ -49,12 +45,19 @@ class Info {
                     this.bodies[i].speed = v.add(iV0.subtr(iV0Pr));
                     this.bodies[j].speed = v.add(jV0.subtr(jV0Pr));
 
+                    //repulsive force
+                    let depth = this.bodies[i].radius + this.bodies[j].radius - this.bodies[i].pos.diff(this.bodies[j].pos).len();
+                    forces[i] = forces[i].add(dist.norm().mult(-depth*this.bodies[i].mass*0.5));
+                    forces[j] = forces[j].add(dist.norm().mult(depth*this.bodies[j].mass*0.5));
+
                     //friction
                     let friction = 1 - (1 - this.bodies[i].friction) * (1 - this.bodies[j].friction);
-                    this.bodies[i].speed = this.bodies[i].speed.mult(friction);
-                    this.bodies[j].speed = this.bodies[j].speed.mult(friction);
+                    console.log(friction*Math.atan(depth) / Math.PI * 2);
+                    this.bodies[i].speed = this.bodies[i].speed.mult(friction*Math.atan(depth / FRICT_COEF)/Math.PI*2);
+                    this.bodies[j].speed = this.bodies[j].speed.mult(friction*Math.atan(depth / FRICT_COEF)/Math.PI*2);
                 }
             });
+            this.bodies[i].speed = this.bodies[i].speed.add(forces[i].mult(frtime / this.bodies[i].mass));
         });
 
         //      _____CALCULATING POSITIONS_____
@@ -109,58 +112,20 @@ class Info {
     }*/
     constructor() {
         this.bodies = new Array();
-        //this.bodies.push(new Circle(new Vec2D(100, 250), new Vec2D(0, 50), 100, 20, '#ff0000'));
 
-        /*this.bodies.push(new Circle(new Vec2D(800, 300), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(800, 350), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(800, 400), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(800, 450), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(800, 500), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(800, 550), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        
-        this.bodies.push(new Circle(new Vec2D(1000, 250), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1000, 300), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1000, 350), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1000, 400), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1000, 450), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1000, 500), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1000, 550), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        
-        this.bodies.push(new Circle(new Vec2D(1200, 250), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1200, 300), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1200, 350), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1200, 400), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1200, 450), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1200, 500), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1200, 550), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        
-        this.bodies.push(new Circle(new Vec2D(1500, 250), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1500, 300), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1500, 350), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1500, 400), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1500, 450), new Vec2D(0, 50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1500, 500), new Vec2D(0, -50), 100, 20, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(1500, 550), new Vec2D(0, 50), 100, 20, '#ff0000'));*/
+        this.bodies.push(new Circle(new Vec2D(200, 100), new Vec2D(0, 30), 500, 20, '#ff0000', 0.95));
+        this.bodies.push(new Circle(new Vec2D(180, 140), new Vec2D(0, 30), 500, 20, '#ff0000', 0.95));
+        this.bodies.push(new Circle(new Vec2D(220, 140), new Vec2D(0, 30), 500, 20, '#ff0000', 0.95));
+        this.bodies.push(new Circle(new Vec2D(200, 500), new Vec2D(0, -100), 500, 20, '#00ff00', 0.95));
+        //this.bodies.push(new Circle(new Vec2D(100, 100), new Vec2D(0, 30), 5700, 50, '#ff0000', 0.9));
+        //this.bodies.push(new Circle(new Vec2D(200, 500), new Vec2D(0, -20.5), 5000, 30, '#0000ff', 0.9));
 
-        //this.bodies.push(new Circle(new Vec2D(800, 400), new Vec2D(0, 0), 500, 50, '#0000ff'));
-        /*this.bodies.push(new Circle(new Vec2D(500, 500), new Vec2D(0, 0), 5000, 100, '#ffff00'));
-        this.bodies.push(new Circle(new Vec2D(260, 400), new Vec2D(0, 0), 500, 30, '#ff0000'));
-        this.bodies.push(new Circle(new Vec2D(300, 600), new Vec2D(0, 0), 500, 30, '#0000ff'));*/
-        
-        this.bodies.push(new Circle(new Vec2D(200, 100), new Vec2D(5, 0), 5000, 30, '#ff0000', 0));
-        this.bodies.push(new Circle(new Vec2D(200, 400), new Vec2D(-5, 0), 5000, 30, '#0000ff', 0));
-
-        /*const W = 20, H = 8;
+        /*const W = 3, H = 3;
         for (let i = 0; i < W; i++) {
             for (let j = 0; j < H; j++) {
                 this.bodies.push(new Circle(new Vec2D(i * viewportToPixels('100vw') / (W - 1), j * viewportToPixels('100vh') / (H - 1)), new Vec2D(0, 0), 500, 50, '#ff0000'));
             }
         }*/
-        //this.bodies.push(new Circle(new Vec2D(600, 0), new Vec2D(0, 0), 50000, 100, '#00ff00'));
-
-        //this.bodies.push(new Circle(new Vec2D(400, 400), new Vec2D(0, 0), 50000, 100, '#ffff00'));
-        //this.bodies.push(new Circle(new Vec2D(800, 700), new Vec2D(0, 0), 600, 30, '#0000ff'));
-        //this.bodies.push(new Circle(new Vec2D(800, 800), new Vec2D(-30, 0), 20, 20, '#ff00ff'));
     } 
 }
 class Vec2D {
@@ -207,22 +172,6 @@ class Vec2D {
 class Body {    //abstr body class
     // Body has pos, speed and mass
     draw(ctx) {  }
-    /* calcGravity(body) {
-        //G*m1*m2/r^2
-        const GR_COEFF = 50;
-        //F = (GR_COEFF * this.mass * body.mass / this.pos.subtr(body.pos).len())
-        let dist = body.pos.subtr(this.pos);
-        return dist.norm().mult((GR_COEFF * this.mass * body.mass / dist.len()));
-    }
-    calcSpeed(force, frtime) {
-        // a = f/m
-        // v += a * frtime / 1000
-        // v += f / m * frtime / 1000
-        this.speed = this.speed.add(force.div(this.mass));
-    }
-    calcPos(frtime) {
-        this.pos = this.pos.add(this.speed.mult(frtime / 1000));
-    } */
     constructor(pos, speed, mass) {
         this.pos = pos;
         this.speed = speed;

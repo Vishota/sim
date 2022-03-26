@@ -2,22 +2,49 @@
 class Info {
     constructor() {
         this.ps = new Array; //parcticles
-        this.ps.push(new Particle(new Vec2D(100, 50), 100, 30, new Vec2D(0, 0),'#00f'));
-        this.ps.push(new Particle(new Vec2D(20, 60), 100, 30, new Vec2D(0, 0), '#f00'));
+        this.ps.push(new Particle(new Vec2D(400, 400), 1000, 200, new Vec2D(0, 0),'#00f'));
+        this.ps.push(new Particle(new Vec2D(400, 600), 1000, 200, new Vec2D(1, -1),'#0f0'));
+        this.ps.push(new Particle(new Vec2D(600, 600), 1000, 200, new Vec2D(-1, 0),'#f00'));
+        this.ps.push(new Particle(new Vec2D(600, 400), 1000, 200, new Vec2D(0, 1),'#ff0'));
     }
     tick(ctx, frtime) {
-        let numbers = Object.keys(this.ps);
+        let numbers;
+        numbers = Object.keys(this.ps);
+        numbers.forEach(i => {this.ps[i].draw(ctx)});
+        //FORCES
+        numbers = Object.keys(this.ps);
+        let forces = new Array;
+        let count = numbers.length;
+        numbers.forEach(i => {
+            forces[i] = new Vec2D(0,0);
+        });
+        //FORCES -> GRAVITY
         numbers.forEach(i => {
             numbers = numbers.filter(f => {return f != i});
             numbers.forEach(j => {
-                this.ps[i].calcGrav(this.ps[j]).draw(ctx, this.ps[i].pos);
+                let gr = this.ps[i].calcGrav(this.ps[j]);
+                gr.draw(ctx, this.ps[i].pos);
+                gr.mult(-1).draw(ctx, this.ps[j].pos);
+                forces[i] = forces[i].add(gr);
+                forces[j] = forces[j].subtr(gr);
             });
         });
 
+        //SPEEDS
         numbers = Object.keys(this.ps);
-        numbers.forEach(i => {this.ps[i].draw(ctx)});
+        numbers.forEach(i => {
+            this.ps[i].speed = this.ps[i].speed.add(forces[i].div(this.ps[i].mass));
+        });
 
-        this.ps[1].pos.x+=1;
+        //POSITIONS
+        numbers = Object.keys(this.ps);
+        numbers.forEach(i => {
+            this.ps[i].pos = this.ps[i].pos.add(this.ps[i].speed);
+        });
+
+        //numbers = Object.keys(this.ps);
+
+        //this.ps[1].pos.x+=1;
     }
 }
 class Vec2D {
@@ -65,19 +92,19 @@ class Particle {
         this.pos = pos;
         this.mass = mass;
         this.focus = focus;
+        this.speed = speed;
         this.color = color;
     }
     calcGrav(p) {
         let dist = this.pos.subtr(p.pos);
         let dl = dist.len();
         let f = (this.focus + p.focus) / 2;
-        let res = dist.norm().mult(-this.mass * p.mass / dl);
-        res = res.add(res.div(Math.max(-dl/f)));
-        return res;
+        let res = dist.norm().mult(-this.mass * p.mass / dl / dl);
+        return res.add(res.div(Math.max(-dl/f, -2)));
         //dist.norm().mult(-this.mass * p.mass / dl / dl); - simple gravity
     }
     draw(ctx) {
-        const R_COEF = .1;
+        const R_COEF = .02;
         ctx.beginPath();
         ctx.fillStyle = this.color;
         ctx.arc(this.pos.x, this.pos.y, this.mass*R_COEF, 0, Math.PI*2, true);
@@ -118,7 +145,7 @@ function main() {
     process(canvas, ctx, 0, info);
 }
 function process(canvas, ctx, lastfrtime, info) {
-    const FRTIME = 10;
+    const FRTIME = 1;
     var start = new Date();
     let buff = switchBuffer(canvas);
     info = loop(canvas[buff], ctx[buff], Math.max(FRTIME, lastfrtime), info);

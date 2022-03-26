@@ -2,10 +2,15 @@
 class Info {
     constructor() {
         this.ps = new Array; //parcticles
-        this.ps.push(new Particle(new Vec2D(400, 400), 1000, 200, new Vec2D(0, 0),'#00f'));
+        /*this.ps.push(new Particle(new Vec2D(400, 400), 1000, 200, new Vec2D(0, 0),'#00f'));
         this.ps.push(new Particle(new Vec2D(400, 600), 1000, 200, new Vec2D(1, -1),'#0f0'));
         this.ps.push(new Particle(new Vec2D(600, 600), 1000, 200, new Vec2D(-1, 0),'#f00'));
-        this.ps.push(new Particle(new Vec2D(600, 400), 1000, 200, new Vec2D(0, 1),'#ff0'));
+        this.ps.push(new Particle(new Vec2D(600, 400), 1000, 200, new Vec2D(0, 1),'#ff0'));*/
+        for(let i = 0; i < 20; i++) {
+            for(let j = 0; j < 20; j++) {
+                this.ps.push(new Particle(new Vec2D(100 + 40 * i, 100 + 40 * j), 300, 100, new Vec2D(0, 0),'#00f'));
+            }
+        }
     }
     tick(ctx, frtime) {
         let numbers;
@@ -18,17 +23,20 @@ class Info {
         numbers.forEach(i => {
             forces[i] = new Vec2D(0,0);
         });
-        //FORCES -> GRAVITY
+        
         numbers.forEach(i => {
             numbers = numbers.filter(f => {return f != i});
             numbers.forEach(j => {
+                //FORCES -> GRAVITY
                 let gr = this.ps[i].calcGrav(this.ps[j]);
-                gr.draw(ctx, this.ps[i].pos);
-                gr.mult(-1).draw(ctx, this.ps[j].pos);
                 forces[i] = forces[i].add(gr);
                 forces[j] = forces[j].subtr(gr);
+                //FORCES -> GRAVITY -> DRAW
+                //gr.draw(ctx, this.ps[i].pos);
+                //gr.mult(-1).draw(ctx, this.ps[j].pos);
             });
         });
+        //FORCES -> BOUNDS
 
         //SPEEDS
         numbers = Object.keys(this.ps);
@@ -100,7 +108,7 @@ class Particle {
         let dl = dist.len();
         let f = (this.focus + p.focus) / 2;
         let res = dist.norm().mult(-this.mass * p.mass / dl / dl);
-        return res.add(res.div(Math.max(-dl/f, -2)));
+        return res.add(res.div(Math.max(-dl/f, -1.5)));
         //dist.norm().mult(-this.mass * p.mass / dl / dl); - simple gravity
     }
     draw(ctx) {

@@ -2,15 +2,16 @@
 class Info {
     constructor() {
         this.ps = new Array; //parcticles
-        /*this.ps.push(new Particle(new Vec2D(400, 400), 1000, 200, new Vec2D(0, 0),'#00f'));
-        this.ps.push(new Particle(new Vec2D(400, 600), 1000, 200, new Vec2D(1, -1),'#0f0'));
+        //this.ps.push(new Particle(new Vec2D(window.innerWidth / 2, -100), 500, 200, new Vec2D(10, 0),'#00f'));
+        /*this.ps.push(new Particle(new Vec2D(400, 600), 1000, 200, new Vec2D(1, -1),'#0f0'));
         this.ps.push(new Particle(new Vec2D(600, 600), 1000, 200, new Vec2D(-1, 0),'#f00'));
         this.ps.push(new Particle(new Vec2D(600, 400), 1000, 200, new Vec2D(0, 1),'#ff0'));*/
-        for(let i = 0; i < 20; i++) {
-            for(let j = 0; j < 20; j++) {
-                this.ps.push(new Particle(new Vec2D(100 + 40 * i, 100 + 40 * j), 300, 100, new Vec2D(0, 0),'#00f'));
+        for(let i = 0; i < 10; i++) {
+            for(let j = 0; j < 10; j++) {
+                this.ps.push(new Particle1(new Vec2D(100 + 40 * i, 100 + 40 * j), 100, 120, new Vec2D(200000, 0),'#0003'));
             }
         }
+        this.ps.push(new Particle1(new Vec2D(window.innerWidth / 2, 600), 500, 120, new Vec2D(0, -30),'#0f0'));
     }
     tick(ctx, frtime) {
         let numbers;
@@ -19,7 +20,6 @@ class Info {
         //FORCES
         numbers = Object.keys(this.ps);
         let forces = new Array;
-        let count = numbers.length;
         numbers.forEach(i => {
             forces[i] = new Vec2D(0,0);
         });
@@ -27,26 +27,48 @@ class Info {
         numbers.forEach(i => {
             numbers = numbers.filter(f => {return f != i});
             numbers.forEach(j => {
-                //FORCES -> GRAVITY
-                let gr = this.ps[i].calcGrav(this.ps[j]);
-                forces[i] = forces[i].add(gr);
-                forces[j] = forces[j].subtr(gr);
-                //FORCES -> GRAVITY -> DRAW
-                //gr.draw(ctx, this.ps[i].pos);
-                //gr.mult(-1).draw(ctx, this.ps[j].pos);
+                //FORCES -> INTERACTION
+                let interForce = this.ps[i].interact(this.ps[j]);
+                forces[i] = forces[i].add(interForce);
+                forces[j] = forces[j].subtr(interForce);
             });
+            //FORCES -> BOUNDS
+            const F_BOUND = 1;
+            //let toCenter = this.ps[i].pos.subtr(new Vec2D(window.innerWidth / 2, window.innerHeight / 2));
+            forces[i] = forces[i].add(new Vec2D(window.innerWidth / 2 - this.ps[i].pos.x, window.innerHeight / 2 - this.ps[i].pos.y)).mult(F_BOUND);
+            /*
+            forces[i] = forces[i].add(new Vec2D(F_BOUND/(this.ps[i].pos.x), 0));
+            forces[i] = forces[i].subtr(new Vec2D(F_BOUND/(window.innerWidth - this.ps[i].pos.x), 0));
+            forces[i] = forces[i].add(new Vec2D(0, Math.abs(F_BOUND/(this.ps[i].pos.y))));
+            forces[i] = forces[i].subtr(new Vec2D(0, Math.abs(F_BOUND/(window.innerHeight - this.ps[i].pos.y))));
+            console.log(new Vec2D(0, Math.abs(F_BOUND/(this.ps[i].pos.y))));*/
         });
-        //FORCES -> BOUNDS
 
         //SPEEDS
         numbers = Object.keys(this.ps);
         numbers.forEach(i => {
+            //SPEEDS -> FORCES
             this.ps[i].speed = this.ps[i].speed.add(forces[i].div(this.ps[i].mass));
+            //SPEEDS -> BOUNDS
+            const BOUND_COLL_SAVE = .000000000003;
+            if(this.ps[i].pos.x < 0) this.ps[i].speed.x = Math.abs(this.ps[i].speed.x)*BOUND_COLL_SAVE;
+            if(this.ps[i].pos.y < 0) this.ps[i].speed.y = Math.abs(this.ps[i].speed.y)*BOUND_COLL_SAVE;
+            if(this.ps[i].pos.x > window.innerWidth) this.ps[i].speed.x = -Math.abs(this.ps[i].speed.x)*BOUND_COLL_SAVE;
+            if(this.ps[i].pos.y > window.innerHeight) this.ps[i].speed.y = -Math.abs(this.ps[i].speed.y)*BOUND_COLL_SAVE;
+            //SPEEDS -> LIMIT
+            const SPEED_MAX = 1000;
+            this.ps[i].speed = this.ps[i].speed.norm().mult(Math.min(this.ps[i].speed.len(), SPEED_MAX));
+            //SPEEDS -> FRICTION
+            this.ps[i].speed = this.ps[i].speed.mult(0.97);
         });
 
         //POSITIONS
         numbers = Object.keys(this.ps);
         numbers.forEach(i => {
+            if(this.ps[i].pos.x < 0) this.ps[i].pos.x = 0;
+            if(this.ps[i].pos.y < 0) this.ps[i].pos.y = 0;
+            if(this.ps[i].pos.x > window.innerWidth) this.ps[i].pos.x = window.innerWidth;
+            if(this.ps[i].pos.y > window.innerHeight) this.ps[i].pos.y = window.innerHeight;
             this.ps[i].pos = this.ps[i].pos.add(this.ps[i].speed);
         });
 
@@ -103,13 +125,7 @@ class Particle {
         this.speed = speed;
         this.color = color;
     }
-    calcGrav(p) {
-        let dist = this.pos.subtr(p.pos);
-        let dl = dist.len();
-        let f = (this.focus + p.focus) / 2;
-        let res = dist.norm().mult(-this.mass * p.mass / dl / dl);
-        return res.add(res.div(Math.max(-dl/f, -1.5)));
-        //dist.norm().mult(-this.mass * p.mass / dl / dl); - simple gravity
+    interact(p) {
     }
     draw(ctx) {
         const R_COEF = .02;
@@ -117,6 +133,32 @@ class Particle {
         ctx.fillStyle = this.color;
         ctx.arc(this.pos.x, this.pos.y, this.mass*R_COEF, 0, Math.PI*2, true);
         ctx.fill();
+    }
+}
+class Particle1 extends Particle {
+    constructor(pos, mass, focus, speed, color) {
+        super(pos, mass, focus, speed, color);
+    }
+    interact(p) {
+        switch(p.constructor.name) {
+            case 'Particle1':
+                const REPULSE_MAX = 5000;
+                let dist = this.pos.subtr(p.pos);
+                let dl = dist.len();
+                let f = (this.focus + p.focus) / 2;
+                let res = dist.norm().mult(-this.mass * p.mass / dl / dl);
+                res = res.add(res.div(-dl/f));
+                if(res.len()!=0)return res.norm().mult(Math.min(REPULSE_MAX, res.len()));
+                return res;
+                //return res.add(res.div(-Math.min(dl/f, this.mass * REPULSE_MAX)));
+        }
+    }
+}
+class Particle2 extends Particle {
+    constructor(pos, mass, focus, speed, color) {
+        super(pos, mass, focus, speed, color);
+    }
+    interact(p) {
     }
 }
 //FUNCTIONS
@@ -153,7 +195,7 @@ function main() {
     process(canvas, ctx, 0, info);
 }
 function process(canvas, ctx, lastfrtime, info) {
-    const FRTIME = 1;
+    const FRTIME = 10;
     var start = new Date();
     let buff = switchBuffer(canvas);
     info = loop(canvas[buff], ctx[buff], Math.max(FRTIME, lastfrtime), info);

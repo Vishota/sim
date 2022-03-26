@@ -6,12 +6,15 @@ class Info {
         /*this.ps.push(new Particle(new Vec2D(400, 600), 1000, 200, new Vec2D(1, -1),'#0f0'));
         this.ps.push(new Particle(new Vec2D(600, 600), 1000, 200, new Vec2D(-1, 0),'#f00'));
         this.ps.push(new Particle(new Vec2D(600, 400), 1000, 200, new Vec2D(0, 1),'#ff0'));*/
-        for(let i = 0; i < 10; i++) {
-            for(let j = 0; j < 10; j++) {
-                this.ps.push(new Particle1(new Vec2D(100 + 40 * i, 100 + 40 * j), 100, 120, new Vec2D(200000, 0),'#0003'));
+        for(let i = 0; i < 40; i++) {
+            for(let j = 0; j < 20; j++) {
+                this.ps.push(new Particle1(new Vec2D(100 + 40 * i, 100 + 40 * j), 100, 50, new Vec2D(0, 0),'#0003'));
             }
+            /*for(let j = 0; j < 20; j++) {
+                this.ps.push(new Particle1(new Vec2D(window.innerWidth - 100 - 40 * i, 100 + 40 * j), 100, 50, new Vec2D(0, 0),'#0003'));
+            }*/
         }
-        this.ps.push(new Particle1(new Vec2D(window.innerWidth / 2, 600), 500, 120, new Vec2D(0, -30),'#0f0'));
+        this.ps.push(new Particle1(new Vec2D(window.innerWidth/2, window.innerHeight/2), 5000, 10000, new Vec2D(0, 0),'#0f0'));
     }
     tick(ctx, frtime) {
         let numbers;
@@ -33,15 +36,8 @@ class Info {
                 forces[j] = forces[j].subtr(interForce);
             });
             //FORCES -> BOUNDS
-            const F_BOUND = 1;
-            //let toCenter = this.ps[i].pos.subtr(new Vec2D(window.innerWidth / 2, window.innerHeight / 2));
-            forces[i] = forces[i].add(new Vec2D(window.innerWidth / 2 - this.ps[i].pos.x, window.innerHeight / 2 - this.ps[i].pos.y)).mult(F_BOUND);
-            /*
-            forces[i] = forces[i].add(new Vec2D(F_BOUND/(this.ps[i].pos.x), 0));
-            forces[i] = forces[i].subtr(new Vec2D(F_BOUND/(window.innerWidth - this.ps[i].pos.x), 0));
-            forces[i] = forces[i].add(new Vec2D(0, Math.abs(F_BOUND/(this.ps[i].pos.y))));
-            forces[i] = forces[i].subtr(new Vec2D(0, Math.abs(F_BOUND/(window.innerHeight - this.ps[i].pos.y))));
-            console.log(new Vec2D(0, Math.abs(F_BOUND/(this.ps[i].pos.y))));*/
+            const F_BOUND = 0.01;
+            //forces[i] = forces[i].add(new Vec2D(window.innerWidth / 2 - this.ps[i].pos.x, window.innerHeight / 2 - this.ps[i].pos.y)).mult(F_BOUND);
         });
 
         //SPEEDS
@@ -50,7 +46,7 @@ class Info {
             //SPEEDS -> FORCES
             this.ps[i].speed = this.ps[i].speed.add(forces[i].div(this.ps[i].mass));
             //SPEEDS -> BOUNDS
-            const BOUND_COLL_SAVE = .000000000003;
+            const BOUND_COLL_SAVE = .5;
             if(this.ps[i].pos.x < 0) this.ps[i].speed.x = Math.abs(this.ps[i].speed.x)*BOUND_COLL_SAVE;
             if(this.ps[i].pos.y < 0) this.ps[i].speed.y = Math.abs(this.ps[i].speed.y)*BOUND_COLL_SAVE;
             if(this.ps[i].pos.x > window.innerWidth) this.ps[i].speed.x = -Math.abs(this.ps[i].speed.x)*BOUND_COLL_SAVE;
@@ -59,7 +55,7 @@ class Info {
             const SPEED_MAX = 1000;
             this.ps[i].speed = this.ps[i].speed.norm().mult(Math.min(this.ps[i].speed.len(), SPEED_MAX));
             //SPEEDS -> FRICTION
-            this.ps[i].speed = this.ps[i].speed.mult(0.97);
+            //this.ps[i].speed = this.ps[i].speed.mult(0.97);
         });
 
         //POSITIONS
@@ -195,7 +191,7 @@ function main() {
     process(canvas, ctx, 0, info);
 }
 function process(canvas, ctx, lastfrtime, info) {
-    const FRTIME = 10;
+    const FRTIME = 1;
     var start = new Date();
     let buff = switchBuffer(canvas);
     info = loop(canvas[buff], ctx[buff], Math.max(FRTIME, lastfrtime), info);

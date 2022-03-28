@@ -1,17 +1,11 @@
+const SPEED_MAX = 3;
 //INFO
 class Info {
     constructor() {
         this.ps = new Array;
         for(let i = 0; i < 10; i++) this.ps.push(new Proton(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
         for(let i = 0; i < 10; i++) this.ps.push(new Neutron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
-        for(let i = 0; i < 100; i++) this.ps.push(new Electron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(Math.random(),Math.random())));
-        //this.ps.push(new Proton(new Vec2D(15,10), new Vec2D(-0,0)));
-        //this.ps.push(new Proton(new Vec2D(10,10), new Vec2D(0,0)));
-        //for(let i = 0; i < 10; i++) this.ps.push(new Electron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
-        //this.ps.push(new Proton(new Vec2D(100,100), new Vec2D(.2,0)));
-        //this.ps.push(new Neutron(new Vec2D(110,110), new Vec2D(-.2,0)));
-        //this.ps.push(new Electron(new Vec2D(150,150), new Vec2D(0,0)));
-        //this.ps.push(new Electron(new Vec2D(170,150), new Vec2D(5,0)));
+        for(let i = 0; i < 100; i++) this.ps.push(new Electron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));//new Vec2D(Math.random(),Math.random())));
     }
     tick(ctx, frtime) {
         this.ps.forEach(el => el.draw(ctx));
@@ -101,7 +95,6 @@ class Particle {
     draw(ctx) {};
     interact(p) {};
     accelerate(force) {
-        const SPEED_MAX = 3;
         let speed_add = force.div(this.mass).len();
         let tomax = SPEED_MAX - this.speed.len();
         let speed = normalize(speed_add)*tomax;
@@ -153,7 +146,7 @@ class Electron extends Subatom {
 }
 //FUNCTIONS
 function calcGravity(m1, m2, p1, p2) {
-    const G = 10;
+    const G = 1;
     let dist = p1.subtr(p2);
     let r = dist.len();
     return dist.norm().mult(G*m1*m2/r/r);

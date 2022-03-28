@@ -2,19 +2,16 @@
 class Info {
     constructor() {
         this.ps = new Array; //parcticles
-        //this.ps.push(new Particle(new Vec2D(window.innerWidth / 2, -100), 500, 200, new Vec2D(10, 0),'#00f'));
+        this.ps.push(new Particle1(new Vec2D(window.innerWidth / 2, 200), 1000, 100, new Vec2D(1, 0),'#00f'));
         /*this.ps.push(new Particle(new Vec2D(400, 600), 1000, 200, new Vec2D(1, -1),'#0f0'));
         this.ps.push(new Particle(new Vec2D(600, 600), 1000, 200, new Vec2D(-1, 0),'#f00'));
         this.ps.push(new Particle(new Vec2D(600, 400), 1000, 200, new Vec2D(0, 1),'#ff0'));*/
-        for(let i = 0; i < 40; i++) {
-            for(let j = 0; j < 20; j++) {
-                this.ps.push(new Particle1(new Vec2D(100 + 40 * i, 100 + 40 * j), 100, 50, new Vec2D(0, 0),'#0003'));
+        for(let i = 0; i < 20; i++) {
+            for(let j = 0; j < 10; j++) {
+                this.ps.push(new Particle1(new Vec2D(100 + 20 * i, 100 + 20 * j), 100, 5000, new Vec2D(0, 0),'#0003'));
             }
-            /*for(let j = 0; j < 20; j++) {
-                this.ps.push(new Particle1(new Vec2D(window.innerWidth - 100 - 40 * i, 100 + 40 * j), 100, 50, new Vec2D(0, 0),'#0003'));
-            }*/
         }
-        this.ps.push(new Particle1(new Vec2D(window.innerWidth/2, window.innerHeight/2), 5000, 10000, new Vec2D(0, 0),'#0f0'));
+        this.ps.push(new Particle1(new Vec2D(window.innerWidth/2 , 500), 5000, 500, new Vec2D(-.2, 0),'#0f0'));
     }
     tick(ctx, frtime) {
         let numbers;
@@ -96,6 +93,10 @@ class Vec2D {
         return this.x * vec.x + this.y * vec.y;
     }
     div(val) {
+        if(val==0) {
+            console.log("Division by zero (vec2d.div())");
+            return this;
+        }
         return new Vec2D(this.x / val, this.y / val);
     }
     len() {
@@ -105,6 +106,10 @@ class Vec2D {
         return this.div(this.len());
     }
     proj(vec) {
+        if(vec.len==0) {
+            console.log("Division by zero (vec2d.proj())");
+            return vec;
+        }
         return this.scalProd(vec) / vec.len();
     }
     constructor(x, y) {

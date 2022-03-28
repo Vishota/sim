@@ -1,79 +1,40 @@
 //INFO
 class Info {
     constructor() {
-        this.ps = new Array; //parcticles
-        //this.ps.push(new Particle1(new Vec2D(window.innerWidth / 2, 200), 1000, 150, new Vec2D(2, 0),'#00f'));
-        /*this.ps.push(new Particle(new Vec2D(400, 600), 1000, 200, new Vec2D(1, -1),'#0f0'));
-        this.ps.push(new Particle(new Vec2D(600, 600), 1000, 200, new Vec2D(-1, 0),'#f00'));
-        this.ps.push(new Particle(new Vec2D(600, 400), 1000, 200, new Vec2D(0, 1),'#ff0'));*/
-        for(let i = 0; i < 10; i++) {
-            for(let j = 0; j < 10; j++) {
-                this.ps.push(new Particle2(new Vec2D(100 + 20 * i, 100 + 20 * j), 180, 100, new Vec2D(2, 10),'#0005', .9));
-            }
-        }
-        for(let i = 0; i < 5; i++) {
-            for(let j = 0; j < 5; j++) {
-                this.ps.push(new Particle1(new Vec2D(window.innerWidth - 20 * i, window.innerHeight + 20 * j), 500, 100, new Vec2D(2, 10),'#99f'));
-            }
-        }
-        //this.ps.push(new Particle1(new Vec2D(window.innerWidth/2 , 500), 3000, 200, new Vec2D(-.2, 0),'#0f0'));
+        this.ps = new Array;
+        for(let i = 0; i < 10; i++) this.ps.push(new Proton(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
+        for(let i = 0; i < 10; i++) this.ps.push(new Neutron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
+        for(let i = 0; i < 100; i++) this.ps.push(new Electron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(Math.random(),Math.random())));
+        //this.ps.push(new Proton(new Vec2D(15,10), new Vec2D(-0,0)));
+        //this.ps.push(new Proton(new Vec2D(10,10), new Vec2D(0,0)));
+        //for(let i = 0; i < 10; i++) this.ps.push(new Electron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
+        //this.ps.push(new Proton(new Vec2D(100,100), new Vec2D(.2,0)));
+        //this.ps.push(new Neutron(new Vec2D(110,110), new Vec2D(-.2,0)));
+        //this.ps.push(new Electron(new Vec2D(150,150), new Vec2D(0,0)));
+        //this.ps.push(new Electron(new Vec2D(170,150), new Vec2D(5,0)));
     }
     tick(ctx, frtime) {
-        let numbers;
-        numbers = Object.keys(this.ps);
-        numbers.forEach(i => {this.ps[i].draw(ctx)});
-        //FORCES
-        numbers = Object.keys(this.ps);
+        this.ps.forEach(el => el.draw(ctx));
+        this.ps.forEach(el => el.tick());
+
         let forces = new Array;
-        numbers.forEach(i => {
-            forces[i] = new Vec2D(0,0);
-        });
-        
-        numbers.forEach(i => {
-            numbers = numbers.filter(f => {return f != i});
-            numbers.forEach(j => {
-                //FORCES -> INTERACTION
-                let interForce = this.ps[i].interact(this.ps[j]);
-                forces[i] = forces[i].add(interForce);
-                forces[j] = forces[j].subtr(interForce);
+        let keys = Object.keys(this.ps);
+        keys.forEach(i=>{forces[i] = new Vec2D(0,0)});
+        keys.forEach(i => {
+            delete keys[i];
+            keys.forEach(j => {
+                let force = this.ps[i].interact(this.ps[j]);;
+                forces[i] = forces[i].add(force.mult(-1));
+                forces[j] = forces[j].add(force);
             });
-            //FORCES -> BOUNDS
-            const F_BOUND = 0.01;
         });
-
-        //SPEEDS
-        numbers = Object.keys(this.ps);
-        numbers.forEach(i => {
-            //SPEEDS -> FORCES
-            this.ps[i].speed = this.ps[i].speed.add(forces[i].div(this.ps[i].mass));
-            //SPEEDS -> BOUNDS
-            const BOUND_COLL_SAVE = .5;
-            if(this.ps[i].pos.x < 0) this.ps[i].speed.x = Math.abs(this.ps[i].speed.x)*BOUND_COLL_SAVE;
-            if(this.ps[i].pos.y < 0) this.ps[i].speed.y = Math.abs(this.ps[i].speed.y)*BOUND_COLL_SAVE;
-            if(this.ps[i].pos.x > window.innerWidth) this.ps[i].speed.x = -Math.abs(this.ps[i].speed.x)*BOUND_COLL_SAVE;
-            if(this.ps[i].pos.y > window.innerHeight) this.ps[i].speed.y = -Math.abs(this.ps[i].speed.y)*BOUND_COLL_SAVE;
-            //SPEEDS -> LIMIT
-            const SPEED_MAX = 1000;
-            this.ps[i].speed = this.ps[i].speed.norm().mult(Math.min(this.ps[i].speed.len(), SPEED_MAX));
-            //SPEEDS -> FRICTION
+        keys = Object.keys(this.ps);
+        keys.forEach(i=>{
+            this.ps[i].accelerate(forces[i]);
         });
-
-        //POSITIONS
-        numbers = Object.keys(this.ps);
-        numbers.forEach(i => {
-            if(this.ps[i].pos.x < 0) this.ps[i].pos.x = 0;
-            if(this.ps[i].pos.y < 0) this.ps[i].pos.y = 0;
-            if(this.ps[i].pos.x > window.innerWidth) this.ps[i].pos.x = window.innerWidth;
-            if(this.ps[i].pos.y > window.innerHeight) this.ps[i].pos.y = window.innerHeight;
+        keys.forEach(i => {
             this.ps[i].pos = this.ps[i].pos.add(this.ps[i].speed);
         });
-
-        numbers = Object.keys(this.ps);
-        numbers.forEach(i => {
-            this.ps[i].tick();
-        });
-
-        //this.ps[1].pos.x+=1;
     }
 }
 class Vec2D {
@@ -124,79 +85,86 @@ class Vec2D {
     }
 }
 //FORMULES
-function calcGrav(p1, p2, f, repmax) {
-    let dist = p1.pos.subtr(p2.pos);
-    let dl = dist.len();
-    let res = dist.norm().mult(-p1.mass * p2.mass / dl / dl);
-    res = res.add(res.div(-dl/f));
-    if(res.len()!=0)return res.norm().mult(Math.min(repmax, res.len()));
-    return res;
-}
-function calcGrav_n(p1, p2, f, repmax) {
-    let dist = p1.pos.subtr(p2.pos);
-    let dl = dist.len();
-    let res = dist.norm().mult(-p1.mass * p2.mass / dl / dl);
-    res = res.add(res.div(-dl/f));
-    //if(res.len()!=0) {
-        return res.norm().mult(normalize(res.len())*repmax);
-    //}
-    //return res;
-}
 //PARTICLES
 class Particle {
-    constructor(pos, mass, focus, speed, color) {
+    constructor(pos, speed, mass) {
         this.pos = pos;
-        this.mass = mass;
-        this.focus = focus;
         this.speed = speed;
-        this.color = color;
-    }
-    interact(p) {
+        this.mass = mass;
     }
     tick() {
+        if(this.pos.x < 0) this.speed.x = Math.abs(this.speed.x);
+        if(this.pos.y < 0) this.speed.y = Math.abs(this.speed.y);
+        if(this.pos.x > window.innerWidth) this.speed.x = -Math.abs(this.speed.x);
+        if(this.pos.y > window.innerHeight) this.speed.y = -Math.abs(this.speed.y);
+    };
+    draw(ctx) {};
+    interact(p) {};
+    accelerate(force) {
+        const SPEED_MAX = 3;
+        let speed_add = force.div(this.mass).len();
+        let tomax = SPEED_MAX - this.speed.len();
+        let speed = normalize(speed_add)*tomax;
+        this.speed = this.speed.add(force.div(this.mass)).norm().mult(this.speed.len()+speed);
+        normalize(this.speed.len());
+    }
+}
+class Subatom extends Particle {
+    constructor(pos, charge, mass, speed) {
+        super(pos, speed, mass);
+        this.charge = charge;
+    }
+    interact(p) {
+        return calcGravity(this.mass, p.mass, this.pos, p.pos).add(calcCoulomb(this.charge, p.charge, this.pos, p.pos));
+    };
+}
+class Proton extends Subatom {
+    constructor(pos, speed) {
+        super(pos, 1, 1, speed);
     }
     draw(ctx) {
-        const R_COEF = .015;
         ctx.beginPath();
-        ctx.fillStyle = this.color;
-        ctx.arc(this.pos.x, this.pos.y, this.mass*R_COEF, 0, Math.PI*2, true);
+        ctx.fillStyle = '#f009';
+        ctx.arc(this.pos.x, this.pos.y, 15, 0, Math.PI*2, true);
         ctx.fill();
     }
 }
-class Particle1 extends Particle {
-    constructor(pos, mass, focus, speed, color) {
-        super(pos, mass, focus, speed, color);
+class Neutron extends Subatom {
+    constructor(pos, speed) {
+        super(pos, 0, 1.0014, speed);
     }
-    tick() {
-    }
-    interact(p) {
-        switch(p.constructor.name) {
-            case 'Particle1':
-                return calcGrav_n(this, p, (this.focus + p.focus), 100);
-            case 'Particle2':
-                return calcGrav_n(this, p, 500, 5000);
-        }
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = '#999d';
+        ctx.arc(this.pos.x, this.pos.y, 15, 0, Math.PI*2, true);
+        ctx.fill();
     }
 }
-class Particle2 extends Particle {
-    constructor(pos, mass, focus, speed, color, inert) {
-        super(pos, mass, focus, speed, color);
-        this.inert = inert;
+class Electron extends Subatom {
+    constructor(pos, speed) {
+        super(pos, -1, 0.000546, speed);
     }
-    interact(p) {
-        let f;
-        switch(p.constructor.name) {
-            case 'Particle2':
-                return calcGrav_n(this, p, 50, 10);
-            case 'Particle1':
-                return calcGrav_n(this, p, 100, 50);
-        }
-    }
-    tick() {
-        this.speed = this.speed.mult(this.inert);
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = '#55fd';
+        ctx.arc(this.pos.x, this.pos.y, 5, 0, Math.PI*2, true);
+        ctx.fill();
     }
 }
 //FUNCTIONS
+function calcGravity(m1, m2, p1, p2) {
+    const G = 10;
+    let dist = p1.subtr(p2);
+    let r = dist.len();
+    return dist.norm().mult(G*m1*m2/r/r);
+}
+function calcCoulomb(q1, q2, p1, p2) {
+    const K = 1;
+    let dist = p1.subtr(p2);
+    let r = dist.len();
+    return dist.norm().mult(-K*q1*q2/r/r);
+}
+
 function normalize(val) {
     return Math.atan(val)/Math.PI * 2;
 }

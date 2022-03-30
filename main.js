@@ -4,9 +4,11 @@ const FRTIME = 1;
 class Info {
     constructor() {
         this.ps = new Array;
-        for(let i = 0; i < 100; i++) this.ps.push(new Grain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
-        for(let i = 0; i < 15; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
-        for(let i = 0; i < 100; i++) this.ps.push(new Antigrain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        //for(let i = 0; i < 100; i++) this.ps.push(new Antigrain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < 25; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        //for(let i = 0; i < 100; i++) this.ps.push(new Grain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < 30; i++) this.ps.push(new DiJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
+        for(let i = 0; i < 10; i++) this.ps.push(new TriJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
     }
     tick(ctx, frtime) {
         let forces = new Array;
@@ -105,7 +107,6 @@ class Particle {
         }
     };
     draw(ctx) {
-        
     };
     interact(p) {};
     accelerate(force) { this.speed = this.speed.add(force.div(this.mass)) };
@@ -129,7 +130,7 @@ class Grain extends Particle {
         switch (p.constructor.name) {
             case 'Grain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10);
             case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, -10);
-            case 'Heavy': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 100);
+            default: return p.interact(this).mult(-1);
         }
     }
 }
@@ -150,9 +151,8 @@ class Antigrain extends Particle {
     }
     interact(p) {
         switch (p.constructor.name) {
-            case 'Grain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, -10);
             case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10);
-            case 'Heavy': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 100);
+            default: return p.interact(this).mult(-1);
         }
     }
 }
@@ -176,17 +176,80 @@ class Heavy extends Particle {
         switch (p.constructor.name) {
             case 'Grain': case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 100);
             case 'Heavy': return new Vec2D(0,0);
+            default: return p.interact(this).mult(-1);
         }
     }
 }
+class JoinParticle extends Particle {
+    constructor(pos, speed, mass, connections, conndist) {
+        super(pos, speed, mass);
+        this.connections = connections;
+        this.connected = new Array;
+        this.conndist = conndist;
+    }
+    accelerate(force, t) {
+        super.accelerate(force);
+        if(t) this.connected.forEach(p => {p.accelerate(force, true)});
+    }
+}
+class DiJoin extends JoinParticle {
+    constructor(pos, speed, conndist) {
+        super(pos, speed, 25000, 2, conndist);
+    }
+    interact(p) {
+        if(p instanceof JoinParticle && p.connected.length < p.connections && this.connected.length < this.connections && this.pos.subtr(p.pos).len() < this.conndist && !this.connected.includes(p)) {
+            this.connected.push(p);
+            p.connected.push(this);
+        }
+        if(this.connected.includes(p)) return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 1000, 1000);
+        return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 1000, 10);
+    }
+    tick() {
+        super.tick();
+        this.speed = this.speed.mult(.9);
+    }
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = '#ff05';
+        ctx.arc(this.pos.x, this.pos.y, 30, 0, Math.PI*2, true);
+        ctx.fill();
+        this.connected.forEach(p => {drawLine(ctx, this.pos.x, this.pos.y, p.pos.x, p.pos.y)});
+    }
+}
+class TriJoin extends JoinParticle {
+    constructor(pos, speed, conndist) {
+        super(pos, speed, 25000, 3, conndist);
+    }
+    interact(p) {
+        if(p instanceof JoinParticle && p.connected.length < p.connections && this.connected.length < this.connections && this.pos.subtr(p.pos).len() < this.conndist && !this.connected.includes(p)) {
+            this.connected.push(p);
+            p.connected.push(this);
+        }
+        if(this.connected.includes(p)) return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 1000, 1000);
+        return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 1000, 10);
+    }
+    tick() {
+        super.tick();
+        this.speed = this.speed.mult(.9);
+    }
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = '#0ff5';
+        ctx.arc(this.pos.x, this.pos.y, 30, 0, Math.PI*2, true);
+        ctx.fill();
+        this.connected.forEach(p => {drawLine(ctx, this.pos.x, this.pos.y, p.pos.x, p.pos.y)});
+    }
+}
 
-
-function calcGrav(m1, m2, p1, p2, f, repmax) {
+function calcGrav(m1, m2, p1, p2, f, repmax, grmax) {
     let dist = p2.subtr(p1);
     if(dist.len() == 0) return new Vec2D(0,0);
     let r = dist.len() - f;
     if(r == 0) return new Vec2D(0,0);
-    return dist.norm().mult(normalize(-m1*m2/(r*Math.abs(r)))*repmax);
+    if(grmax == undefined || r > 0) return dist.norm().mult(normalize(-m1*m2/(r*Math.abs(r)))*grmax);
+    else {
+        return dist.norm().mult(normalize(-m1*m2/(r*Math.abs(r)))*repmax);
+    }
 }
 
 function normalize(val) {

@@ -21,6 +21,12 @@
         </div>
     </body>
     <script>
+        if(Math.random() >= .5) {
+            document.getElementById('gr').value = 100;
+            document.getElementById('anti').value = 200;
+            document.getElementById('di').value = 0;
+            document.getElementById('tri').value = 0;
+        }
         function start() {
             let gr = document.getElementById('gr').value;
             let anti = document.getElementById('anti').value;

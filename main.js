@@ -203,7 +203,7 @@ class DiJoin extends JoinParticle {
             p.connected.push(this);
         }
         if(this.connected.includes(p)) return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 3000);
-        return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 0);
+        return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 10);
     }
     tick() {
         super.tick();
@@ -227,7 +227,7 @@ class TriJoin extends JoinParticle {
             p.connected.push(this);
         }
         if(this.connected.includes(p)) return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 3000);
-        return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 0);
+        return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 10);
     }
     tick() {
         super.tick();

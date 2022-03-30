@@ -6,9 +6,9 @@ class Info {
         this.ps = new Array;
         //for(let i = 0; i < 100; i++) this.ps.push(new Antigrain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
         //for(let i = 0; i < 100; i++) this.ps.push(new Grain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
-        for(let i = 0; i < 50; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
-        for(let i = 0; i < 30; i++) this.ps.push(new DiJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
-        for(let i = 0; i < 10; i++) this.ps.push(new TriJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
+        //for(let i = 0; i < 50; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < 150; i++) this.ps.push(new DiJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
+        //for(let i = 0; i < 50; i++) this.ps.push(new TriJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
     }
     tick(ctx, frtime) {
         let forces = new Array;
@@ -202,8 +202,8 @@ class DiJoin extends JoinParticle {
             this.connected.push(p);
             p.connected.push(this);
         }
-        if(this.connected.includes(p)) return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 1000, 1000);
-        return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 10);
+        if(this.connected.includes(p)) return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 3000);
+        return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 0);
     }
     tick() {
         super.tick();
@@ -226,7 +226,7 @@ class TriJoin extends JoinParticle {
             this.connected.push(p);
             p.connected.push(this);
         }
-        if(this.connected.includes(p)) return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 1000, 1000);
+        if(this.connected.includes(p)) return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 3000);
         return calcGrav(this.mass, p.mass, this.pos, p.pos, this.conndist, 3000, 10);
     }
     tick() {

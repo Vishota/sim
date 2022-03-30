@@ -1,22 +1,14 @@
-const SPEED_MAX = 3;
+const FRTIME = 1;
+
 //INFO
 class Info {
     constructor() {
         this.ps = new Array;
-        //this.ps.push(new Proton(new Vec2D(100,100), new Vec2D(0,0)));
-        //this.ps.push(new Neutron(new Vec2D(300,100), new Vec2D(1,0)));
-        //this.ps.push(new Neutron(new Vec2D(500,100), new Vec2D(0,0)));
-        for(let i = 0; i < 10; i++) this.ps.push(new Proton(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
-        console.log(this.ps[0].constructor.name);
-        for(let i = 0; i < 10; i++) this.ps.push(new Neutron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
-        for(let i = 0; i < 100; i++) this.ps.push(new Electron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));//new Vec2D(Math.random(),Math.random())));
+        for(let i = 0; i < 100; i++) this.ps.push(new Grain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < 20; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < 100; i++) this.ps.push(new Antigrain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
     }
     tick(ctx, frtime) {
-        console.log(this.ps[0].speed);
-        
-        this.ps.forEach(el => el.draw(ctx));
-        this.ps.forEach(el => el.tick());
-
         let forces = new Array;
         let keys = Object.keys(this.ps);
         keys.forEach(i=>{forces[i] = new Vec2D(0,0)});
@@ -35,6 +27,9 @@ class Info {
         keys.forEach(i => {
             this.ps[i].pos = this.ps[i].pos.add(this.ps[i].speed);
         });
+        
+        this.ps.forEach(el => el.tick());
+        this.ps.forEach(el => el.draw(ctx));
     }
 }
 class Vec2D {
@@ -69,18 +64,11 @@ class Vec2D {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
     norm() {
-        //try {
-            return this.div(this.len());
-        //} catch(e) {
-            //alert(e);
-            //console.log(e);
-            //return(new Vec2D(1, 0));
-        //}
+        return this.div(this.len());
     }
     proj(vec) {
         if(vec.len==0) {
             throw("Division by zero (vec2d.proj())");
-            //return 9007199254740991;
         }
         return this.scalProd(vec) / vec.len();
     }
@@ -89,7 +77,7 @@ class Vec2D {
         this.y = y;
     }
 }
-//FORMULES
+
 //PARTICLES
 class Particle {
     constructor(pos, speed, mass) {
@@ -115,126 +103,99 @@ class Particle {
             this.pos.y = window.innerHeight;
         }
     };
-    draw(ctx) {};
+    draw(ctx) {
+        
+    };
     interact(p) {};
-    accelerate(force) {
-        let m0 = this.mass / Math.sqrt(1 - this.speed.len() * this.speed.len() / SPEED_MAX / SPEED_MAX);
-        let speed_add = force.div(m0);
-        speed_add = speed_add.norm().mult(normalize(speed_add.len())*(SPEED_MAX - this.speed.len()));
-        this.speed = this.speed.add(speed_add);
-        /*let speed_add = force.div(this.mass).len();
-        let tomax = SPEED_MAX - this.speed.len();
-        let speed = normalize(speed_add)*tomax;
-        this.speed = this.speed.add(force.div(this.mass)).norm().mult(this.speed.len()+speed);*/
-    }
+    accelerate(force) { this.speed = this.speed.add(force.div(this.mass)) };
 }
-class Subatom extends Particle {
-    constructor(pos, charge, mass, speed) {
-        super(pos, speed, mass);
-        this.charge = charge;
-    }
-    interact(p) {
-        return calcGravity(this.mass, p.mass, this.pos, p.pos).add(calcCoulomb(this.charge, p.charge, this.pos, p.pos)).add(calcWeak(this.pos, p.pos));
-    };
-}
-class Proton extends Subatom {
+class Grain extends Particle {
     constructor(pos, speed) {
-        super(pos, 1, 1, speed);
+        super(pos, speed, 100);
+        this.inert = .95;
     }
     draw(ctx) {
         ctx.beginPath();
-        ctx.fillStyle = '#f009';
-        ctx.arc(this.pos.x, this.pos.y, 15, 0, Math.PI*2, true);
-        ctx.fill();
-    }
-    interact(p) {
-        if(p.constructor.name == "Electron") return super.interact(p);
-        else return super.interact(p).add(calcStrong(this.pos, p.pos));
-    };
-}
-class Neutron extends Subatom {
-    constructor(pos, speed) {
-        super(pos, 0, 1.0014, speed);
-    }
-    draw(ctx) {
-        ctx.beginPath();
-        ctx.fillStyle = '#999d';
-        ctx.arc(this.pos.x, this.pos.y, 15, 0, Math.PI*2, true);
-        ctx.fill();
-    }
-    interact(p) {
-        if(p.constructor.name == "Electron") return calcGravity(this.mass, p.mass, this.pos, p.pos).add(calcCoulomb(this.charge, p.charge, this.pos, p.pos));
-        else return calcGravity(this.mass, p.mass, this.pos, p.pos).add(calcCoulomb(this.charge, p.charge, this.pos, p.pos)).add(calcStrong(this.pos, p.pos));
-    };
-}
-class Electron extends Subatom {
-    constructor(pos, speed) {
-        super(pos, -1, 0.000546, speed);
-    }
-    draw(ctx) {
-        ctx.beginPath();
-        ctx.fillStyle = '#55fd';
+        ctx.fillStyle = '#0005';
         ctx.arc(this.pos.x, this.pos.y, 5, 0, Math.PI*2, true);
         ctx.fill();
     }
     tick() {
         super.tick();
-        //this.speed = this.speed.add(new Vec2D(.001, .001)).norm().mult(SPEED_MAX);
+        this.speed = this.speed.mult(this.inert);
+    }
+    interact(p) {
+        switch (p.constructor.name) {
+            case 'Grain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10);
+            case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, -10);
+            case 'Heavy': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 100);
+        }
     }
 }
-//FUNCTIONS
-function calcGravity(m1, m2, p1, p2) {
-    const G = 10;
-    let dist = p1.subtr(p2);
-    let r = dist.len();
-    return new Vec2D(0,0);
-    if (r == 0) return new Vec2D(0,0);
-    return dist.norm().mult(G*m1*m2/r/r);
+class Antigrain extends Particle {
+    constructor(pos, speed) {
+        super(pos, speed, 100);
+        this.inert = .95;
+    }
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = '#0f05';
+        ctx.arc(this.pos.x, this.pos.y, 5, 0, Math.PI*2, true);
+        ctx.fill();
+    }
+    tick() {
+        super.tick();
+        this.speed = this.speed.mult(this.inert);
+    }
+    interact(p) {
+        switch (p.constructor.name) {
+            case 'Grain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, -10);
+            case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10);
+            case 'Heavy': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 100);
+        }
+    }
 }
-function calcCoulomb(q1, q2, p1, p2) {
-    const K = -100;
-    let dist = p1.subtr(p2);
-    let r = dist.len();
-    return new Vec2D(0,0);
-    if (r == 0) return new Vec2D(0,0);
-    return dist.norm().mult(K*q1*q2/r/r);
+class Heavy extends Particle {
+    constructor(pos, speed) {
+        super(pos, speed, 100000);
+    }
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = '#f005';
+        ctx.arc(this.pos.x, this.pos.y, 5, 0, Math.PI*2, true);
+        ctx.fill();
+    }
+    tick() {
+        super.tick();
+        const SPEED = 5;
+        if(this.speed.len() == 0) this.speed = new Vec2D(SPEED, 0);
+        else this.speed = this.speed.norm().mult(SPEED);
+    }
+    interact(p) {
+        switch (p.constructor.name) {
+            case 'Grain': case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10);
+            case 'Heavy': return new Vec2D(0,0);
+        }
+    }
 }
-function calcStrong(p1,p2) {
-    let dist = p1.subtr(p2);
-    let r = dist.len();
-    const K_STRONG = 10000;
-    const R0_STRONG = 10;
-    let strong = K_STRONG*Math.exp(-r/R0_STRONG)/r;
-    //return new Vec2D(0,0);
-    if (r == 0) return new Vec2D(0,0);
-    return dist.norm().mult(strong);
-}
-function calcWeak(p1,p2) {
-    console.log('weak');
-    let dist = p1.subtr(p2);
-    let r = dist.len();
-    const K_WEAK = -100000;
-    const R0_WEAK = 10;
-    let strong = K_WEAK*Math.exp(-r/R0_WEAK)/r;
-    //return new Vec2D(0,0);
-    if (r == 0) return new Vec2D(0,0);
-    return dist.norm().mult(strong);
+
+
+function calcGrav(m1, m2, p1, p2, f, repmax) {
+    let dist = p2.subtr(p1);
+    if(dist.len() == 0) return new Vec2D(0,0);
+    let r = dist.len() - f;
+    if(r == 0) return new Vec2D(0,0);
+    return dist.norm().mult(normalize(-m1*m2/(r*Math.abs(r)))*repmax);
 }
 
 function normalize(val) {
-    return Math.atan(val)/Math.PI * 2;
+    return Math.atan(val) / Math.PI * 2;
 }
 function drawLine(ctx, x1, y1, x2, y2) {
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
-}
-function viewportToPixels(value) {
-    var parts = value.match(/([0-9\.]+)(vh|vw)/)
-    var q = Number(parts[1])
-    var side = window[['innerHeight', 'innerWidth'][['vh', 'vw'].indexOf(parts[2])]]
-    return side * (q/100)
 }
 function switchBuffer(canvas) {
     //returns invisible canvas number
@@ -249,7 +210,7 @@ function switchBuffer(canvas) {
         return 1;
     }
 }
-//MAIN AND PROCESS
+
 function main() {
     let canvas = [document.querySelector('#main1'), document.querySelector('#main2')];
     let ctx = [canvas[0].getContext("2d"), canvas[1].getContext("2d")];
@@ -257,7 +218,6 @@ function main() {
     process(canvas, ctx, 0, info);
 }
 function process(canvas, ctx, lastfrtime, info) {
-    const FRTIME = 1;
     var start = new Date();
     let buff = switchBuffer(canvas);
     info = loop(canvas[buff], ctx[buff], Math.max(FRTIME, lastfrtime), info);
@@ -267,7 +227,6 @@ function process(canvas, ctx, lastfrtime, info) {
     }, Math.max(0, FRTIME - lastfrtime));
 }
 
-//CODE
 function setup(canvas, ctx) {
     return new Info();
 }
@@ -275,8 +234,8 @@ function loop(canvas, ctx, frtime, info) {
     //fps
     document.title = 'FPS=' + 1000/frtime;
     //canvas resizing
-    canvas.width = viewportToPixels('100vw');
-    canvas.height = viewportToPixels('100vh');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     //drawing
     info.tick(ctx, frtime);
     return info;

@@ -149,8 +149,8 @@ class Antigrain extends Particle {
     }
     interact(p) {
         switch (p.constructor.name) {
-            case 'Grain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, -10);
-            case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10);
+            case 'Grain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, -10 * (new Date() % 2000 > 1000 ? 1 : -1));
+            case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10 * (new Date() % 2000 > 1000 ? 1 : -1));
             case 'Heavy': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 100);
         }
     }
@@ -232,7 +232,7 @@ function setup(canvas, ctx) {
 }
 function loop(canvas, ctx, frtime, info) {
     //fps
-    document.title = 'FPS=' + 1000/frtime;
+    document.title = 'FPS=' + (1000/frtime).toFixed(2);
     //canvas resizing
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;

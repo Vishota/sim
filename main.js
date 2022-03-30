@@ -5,8 +5,8 @@ class Info {
     constructor() {
         this.ps = new Array;
         //for(let i = 0; i < 100; i++) this.ps.push(new Antigrain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
-        //for(let i = 0; i < 25; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
         //for(let i = 0; i < 100; i++) this.ps.push(new Grain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < 50; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
         for(let i = 0; i < 30; i++) this.ps.push(new DiJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
         for(let i = 0; i < 10; i++) this.ps.push(new TriJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
     }
@@ -19,6 +19,7 @@ class Info {
             let k = true;
             keys.forEach(j => {
                 let force = this.ps[i].interact(this.ps[j]);
+                if(!(force instanceof Vec2D)) throw('Bad force');
                 forces[i] = forces[i].add(force.mult(-1));
                 forces[j] = forces[j].add(force);
             });
@@ -109,7 +110,7 @@ class Particle {
     draw(ctx) {
     };
     interact(p) {};
-    accelerate(force) { this.speed = this.speed.add(force.div(this.mass)) };
+    accelerate(force) { if(!(force instanceof Vec2D)) throw('Bad force'); this.speed = this.speed.add(force.div(this.mass)) };
 }
 class Grain extends Particle {
     constructor(pos, speed) {
@@ -246,9 +247,9 @@ function calcGrav(m1, m2, p1, p2, f, repmax, grmax) {
     if(dist.len() == 0) return new Vec2D(0,0);
     let r = dist.len() - f;
     if(r == 0) return new Vec2D(0,0);
-    if(grmax == undefined || r > 0) return dist.norm().mult(normalize(-m1*m2/(r*Math.abs(r)))*grmax);
+    if(grmax == undefined || r < 0) return dist.norm().mult(normalize(-m1*m2/(r*Math.abs(r)))*repmax);
     else {
-        return dist.norm().mult(normalize(-m1*m2/(r*Math.abs(r)))*repmax);
+        return dist.norm().mult(normalize(-m1*m2/(r*Math.abs(r)))*grmax);
     }
 }
 

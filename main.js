@@ -5,7 +5,7 @@ class Info {
     constructor() {
         this.ps = new Array;
         for(let i = 0; i < 100; i++) this.ps.push(new Grain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
-        for(let i = 0; i < 20; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < 15; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
         for(let i = 0; i < 100; i++) this.ps.push(new Antigrain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
     }
     tick(ctx, frtime) {
@@ -14,8 +14,9 @@ class Info {
         keys.forEach(i=>{forces[i] = new Vec2D(0,0)});
         keys.forEach(i => {
             delete keys[i];
+            let k = true;
             keys.forEach(j => {
-                let force = this.ps[i].interact(this.ps[j]);;
+                let force = this.ps[i].interact(this.ps[j]);
                 forces[i] = forces[i].add(force.mult(-1));
                 forces[j] = forces[j].add(force);
             });
@@ -149,15 +150,15 @@ class Antigrain extends Particle {
     }
     interact(p) {
         switch (p.constructor.name) {
-            case 'Grain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, -10 * (new Date() % 2000 > 1000 ? 1 : -1));
-            case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10 * (new Date() % 2000 > 1000 ? 1 : -1));
+            case 'Grain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, -10);
+            case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10);
             case 'Heavy': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 100);
         }
     }
 }
 class Heavy extends Particle {
     constructor(pos, speed) {
-        super(pos, speed, 100000);
+        super(pos, speed, 10000);
     }
     draw(ctx) {
         ctx.beginPath();
@@ -173,7 +174,7 @@ class Heavy extends Particle {
     }
     interact(p) {
         switch (p.constructor.name) {
-            case 'Grain': case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 10);
+            case 'Grain': case 'Antigrain': return calcGrav(this.mass, p.mass, this.pos, p.pos, 50, 100);
             case 'Heavy': return new Vec2D(0,0);
         }
     }

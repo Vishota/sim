@@ -2,13 +2,13 @@ const FRTIME = 1;
 
 //INFO
 class Info {
-    constructor() {
+    constructor(gr, anti, heavy, di, tri) {
         this.ps = new Array;
-        //for(let i = 0; i < 100; i++) this.ps.push(new Antigrain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
-        //for(let i = 0; i < 100; i++) this.ps.push(new Grain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
-        for(let i = 0; i < 100; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
-        for(let i = 0; i < 120; i++) this.ps.push(new DiJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
-        for(let i = 0; i < 30; i++) this.ps.push(new TriJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
+        for(let i = 0; i < gr; i++) this.ps.push(new Grain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < anti; i++) this.ps.push(new Antigrain(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < heavy; i++)  this.ps.push(new Heavy(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0, 0)));
+        for(let i = 0; i < di; i++) this.ps.push(new DiJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
+        for(let i = 0; i < tri; i++) this.ps.push(new TriJoin(new Vec2D(Math.random() * window.innerWidth, Math.random() * window.innerHeight), new Vec2D(0,0), 100));
     }
     tick(ctx, frtime) {
         let forces = new Array;
@@ -276,10 +276,10 @@ function switchBuffer(canvas) {
     }
 }
 
-function main() {
+function main(gr, anti, heavy, di, tri) {
     let canvas = [document.querySelector('#main1'), document.querySelector('#main2')];
     let ctx = [canvas[0].getContext("2d"), canvas[1].getContext("2d")];
-    let info = setup(canvas, ctx);
+    let info = setup(canvas, ctx, gr, anti, heavy, di, tri);
     process(canvas, ctx, 0, info);
 }
 function process(canvas, ctx, lastfrtime, info) {
@@ -292,8 +292,8 @@ function process(canvas, ctx, lastfrtime, info) {
     }, Math.max(0, FRTIME - lastfrtime));
 }
 
-function setup(canvas, ctx) {
-    return new Info();
+function setup(canvas, ctx, gr, anti, heavy, di, tri) {
+    return new Info(gr, anti, heavy, di, tri);
 }
 function loop(canvas, ctx, frtime, info) {
     //fps

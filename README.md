@@ -13,3 +13,5 @@ They interact with each other in the same way as *Grain* particles, but interact
 ### "Join" particles  
 *DiJoin* and *TriJoin* particles are can connect with each other. They looks like big yellow and blue circles respectively  
 ![image](https://user-images.githubusercontent.com/88852731/160927462-0d53f7dd-8ac9-449f-ac2c-bf3233d4b94e.png)
+## Demo  
+You can see demo by clicking [here](https://vishota.github.io/sim/)

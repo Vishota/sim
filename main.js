@@ -3,11 +3,17 @@ const SPEED_MAX = 3;
 class Info {
     constructor() {
         this.ps = new Array;
+        //this.ps.push(new Proton(new Vec2D(100,100), new Vec2D(0,0)));
+        //this.ps.push(new Neutron(new Vec2D(300,100), new Vec2D(1,0)));
+        //this.ps.push(new Neutron(new Vec2D(500,100), new Vec2D(0,0)));
         for(let i = 0; i < 10; i++) this.ps.push(new Proton(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
+        console.log(this.ps[0].constructor.name);
         for(let i = 0; i < 10; i++) this.ps.push(new Neutron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));
         for(let i = 0; i < 100; i++) this.ps.push(new Electron(new Vec2D(Math.random()*window.innerWidth,Math.random()*window.innerHeight), new Vec2D(0,0)));//new Vec2D(Math.random(),Math.random())));
     }
     tick(ctx, frtime) {
+        console.log(this.ps[0].speed);
+        
         this.ps.forEach(el => el.draw(ctx));
         this.ps.forEach(el => el.tick());
 
@@ -55,8 +61,7 @@ class Vec2D {
     }
     div(val) {
         if(val==0) {
-            console.log("Division by zero (vec2d.div())");
-            return this;
+            throw("Division by zero (vec2d.div())");
         }
         return new Vec2D(this.x / val, this.y / val);
     }
@@ -64,12 +69,18 @@ class Vec2D {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
     norm() {
-        return this.div(this.len());
+        //try {
+            return this.div(this.len());
+        //} catch(e) {
+            //alert(e);
+            //console.log(e);
+            //return(new Vec2D(1, 0));
+        //}
     }
     proj(vec) {
         if(vec.len==0) {
-            console.log("Division by zero (vec2d.proj())");
-            return vec;
+            throw("Division by zero (vec2d.proj())");
+            //return 9007199254740991;
         }
         return this.scalProd(vec) / vec.len();
     }
@@ -87,19 +98,34 @@ class Particle {
         this.mass = mass;
     }
     tick() {
-        if(this.pos.x < 0) this.speed.x = Math.abs(this.speed.x);
-        if(this.pos.y < 0) this.speed.y = Math.abs(this.speed.y);
-        if(this.pos.x > window.innerWidth) this.speed.x = -Math.abs(this.speed.x);
-        if(this.pos.y > window.innerHeight) this.speed.y = -Math.abs(this.speed.y);
+        if(this.pos.x < 0) {
+            this.speed.x = Math.abs(this.speed.x);
+            this.pos.x = 0;
+        }
+        if(this.pos.y < 0) {
+            this.speed.y = Math.abs(this.speed.y);
+            this.pos.y = 0;
+        }
+        if(this.pos.x > window.innerWidth) {
+            this.speed.x = -Math.abs(this.speed.x);
+            this.pos.x = window.innerWidth;
+        }
+        if(this.pos.y > window.innerHeight) {
+            this.speed.y = -Math.abs(this.speed.y);
+            this.pos.y = window.innerHeight;
+        }
     };
     draw(ctx) {};
     interact(p) {};
     accelerate(force) {
-        let speed_add = force.div(this.mass).len();
+        let m0 = this.mass / Math.sqrt(1 - this.speed.len() * this.speed.len() / SPEED_MAX / SPEED_MAX);
+        let speed_add = force.div(m0);
+        speed_add = speed_add.norm().mult(normalize(speed_add.len())*(SPEED_MAX - this.speed.len()));
+        this.speed = this.speed.add(speed_add);
+        /*let speed_add = force.div(this.mass).len();
         let tomax = SPEED_MAX - this.speed.len();
         let speed = normalize(speed_add)*tomax;
-        this.speed = this.speed.add(force.div(this.mass)).norm().mult(this.speed.len()+speed);
-        normalize(this.speed.len());
+        this.speed = this.speed.add(force.div(this.mass)).norm().mult(this.speed.len()+speed);*/
     }
 }
 class Subatom extends Particle {
@@ -108,7 +134,7 @@ class Subatom extends Particle {
         this.charge = charge;
     }
     interact(p) {
-        return calcGravity(this.mass, p.mass, this.pos, p.pos).add(calcCoulomb(this.charge, p.charge, this.pos, p.pos));
+        return calcGravity(this.mass, p.mass, this.pos, p.pos).add(calcCoulomb(this.charge, p.charge, this.pos, p.pos)).add(calcWeak(this.pos, p.pos));
     };
 }
 class Proton extends Subatom {
@@ -121,6 +147,10 @@ class Proton extends Subatom {
         ctx.arc(this.pos.x, this.pos.y, 15, 0, Math.PI*2, true);
         ctx.fill();
     }
+    interact(p) {
+        if(p.constructor.name == "Electron") return super.interact(p);
+        else return super.interact(p).add(calcStrong(this.pos, p.pos));
+    };
 }
 class Neutron extends Subatom {
     constructor(pos, speed) {
@@ -132,6 +162,10 @@ class Neutron extends Subatom {
         ctx.arc(this.pos.x, this.pos.y, 15, 0, Math.PI*2, true);
         ctx.fill();
     }
+    interact(p) {
+        if(p.constructor.name == "Electron") return calcGravity(this.mass, p.mass, this.pos, p.pos).add(calcCoulomb(this.charge, p.charge, this.pos, p.pos));
+        else return calcGravity(this.mass, p.mass, this.pos, p.pos).add(calcCoulomb(this.charge, p.charge, this.pos, p.pos)).add(calcStrong(this.pos, p.pos));
+    };
 }
 class Electron extends Subatom {
     constructor(pos, speed) {
@@ -143,19 +177,48 @@ class Electron extends Subatom {
         ctx.arc(this.pos.x, this.pos.y, 5, 0, Math.PI*2, true);
         ctx.fill();
     }
+    tick() {
+        super.tick();
+        //this.speed = this.speed.add(new Vec2D(.001, .001)).norm().mult(SPEED_MAX);
+    }
 }
 //FUNCTIONS
 function calcGravity(m1, m2, p1, p2) {
-    const G = 1;
+    const G = 10;
     let dist = p1.subtr(p2);
     let r = dist.len();
+    return new Vec2D(0,0);
+    if (r == 0) return new Vec2D(0,0);
     return dist.norm().mult(G*m1*m2/r/r);
 }
 function calcCoulomb(q1, q2, p1, p2) {
-    const K = 1;
+    const K = -100;
     let dist = p1.subtr(p2);
     let r = dist.len();
-    return dist.norm().mult(-K*q1*q2/r/r);
+    return new Vec2D(0,0);
+    if (r == 0) return new Vec2D(0,0);
+    return dist.norm().mult(K*q1*q2/r/r);
+}
+function calcStrong(p1,p2) {
+    let dist = p1.subtr(p2);
+    let r = dist.len();
+    const K_STRONG = 10000;
+    const R0_STRONG = 10;
+    let strong = K_STRONG*Math.exp(-r/R0_STRONG)/r;
+    //return new Vec2D(0,0);
+    if (r == 0) return new Vec2D(0,0);
+    return dist.norm().mult(strong);
+}
+function calcWeak(p1,p2) {
+    console.log('weak');
+    let dist = p1.subtr(p2);
+    let r = dist.len();
+    const K_WEAK = -100000;
+    const R0_WEAK = 10;
+    let strong = K_WEAK*Math.exp(-r/R0_WEAK)/r;
+    //return new Vec2D(0,0);
+    if (r == 0) return new Vec2D(0,0);
+    return dist.norm().mult(strong);
 }
 
 function normalize(val) {

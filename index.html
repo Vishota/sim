@@ -9,8 +9,9 @@
             <input id="gr" placeholder="grains count" value=0> Grains<br>
             <input id="anti" placeholder="antigrains count" value=0> Antigrains<br>
             <input id="heavy" placeholder="heavy count" value=20> Heavy<br>
-            <input id="di" placeholder="dijoin count" value=40> DiJoin<br>
-            <input id="tri" placeholder="trijoin count" value=20> TriJoin<br>
+            <input id="uno" placeholder="trijoin count" value=30> UnoJoin<br>
+            <input id="di" placeholder="dijoin count" value=60> DiJoin<br>
+            <input id="tri" placeholder="trijoin count" value=40> TriJoin<br>
             <button id="start" onclick="start()">Start</button>
         </div>
         <div id="sim" style="display: none">
@@ -24,6 +25,7 @@
         if(Math.random() >= .5) {
             document.getElementById('gr').value = 100;
             document.getElementById('anti').value = 200;
+            document.getElementById('uno').value = 0;
             document.getElementById('di').value = 0;
             document.getElementById('tri').value = 0;
         }
@@ -31,11 +33,12 @@
             let gr = document.getElementById('gr').value;
             let anti = document.getElementById('anti').value;
             let heavy = document.getElementById('heavy').value;
+            let uno = document.getElementById('uno').value;
             let di = document.getElementById('di').value;
             let tri = document.getElementById('tri').value;
             document.getElementById('settings').setAttribute('style', 'display: none');
             document.getElementById('sim').setAttribute('style', '');
-            main(gr, anti, heavy, di, tri);
+            main(gr, anti, heavy, uno, di, tri);
         }
     </script>
 </html>
